@@ -268,8 +268,8 @@ void SampleEditor::loadFile()
 	table->setModels(data,selection,selection2);//////////////////////////////////////////////////////////////////////////
 	table->show();
 
-	//plot->setModels(data,selection);
-	//plot->show();
+	plot->setModels(data,selection);
+	plot->show();
 	/*this->histo->setModels(data, selection);
 	this->histo->show();*/
 	//std::cout << "I reached here inside the sample editor"<<std::endl;

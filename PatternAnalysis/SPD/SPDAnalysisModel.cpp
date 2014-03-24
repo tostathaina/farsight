@@ -874,7 +874,7 @@ int SPDAnalysisModel::ClusterAgglomerate(double cor, double mer)
 	vnl_matrix<double> moduleMean = MatrixAfterCellCluster;
 	moduleMean.normalize_columns();
 
-	this->filename = "C++_" + QString::number(MatrixAfterCellCluster.cols())+ "_" + QString::number(MatrixAfterCellCluster.rows()) + 
+	this->filename = QString::number(MatrixAfterCellCluster.cols())+ "_" + QString::number(MatrixAfterCellCluster.rows()) + 
 					"_" + QString::number( cor, 'g', 4) + "_" + QString::number( mer, 'g', 4)+ "_";
 	QString filenameCluster = this->filename + "clustering.txt";
 	std::ofstream ofs(filenameCluster.toStdString().c_str(), std::ofstream::out);
@@ -2886,7 +2886,7 @@ void SPDAnalysisModel::GetClusClusDataMST(clusclus *c1, double threshold, std::v
 
 void SPDAnalysisModel::GetBiClusData(vnl_matrix<double> &mat, clusclus *c1, vnl_vector<double> *diagVec)
 {
-	std::ofstream ofs("Debug.txt");
+	//std::ofstream ofs("debugNSVis.txt");
 	//ofs<< mat<<std::endl;
 
 	if( c1 == NULL)
@@ -2899,13 +2899,12 @@ void SPDAnalysisModel::GetBiClusData(vnl_matrix<double> &mat, clusclus *c1, vnl_
 	double max = 0;
 
 	GetDiagnalMinMax(mat, min, max);
-	std::cout<< max<< "\t"<< min<<std::endl;
 
 	std::set< unsigned int> mIds;
 	std::vector< std::vector< unsigned int> > order;
 	for(double selThreshold = max; selThreshold >= min; selThreshold -= 0.02)
 	{
-		ofs<< selThreshold<< std::endl;
+		//ofs<< selThreshold<< std::endl;
 		std::vector<std::vector<unsigned int> > modID;
 
 		int rtnCount = GetSelectedFeaturesModulesForBlockVisualization(mat, selThreshold, modID); // the opposite way, output include the previous!!
@@ -2913,45 +2912,45 @@ void SPDAnalysisModel::GetBiClusData(vnl_matrix<double> &mat, clusclus *c1, vnl_
 
 		for( size_t i = 0; i < modID.size(); i++)
 		{
-			ofs<< "CC:" << i<< std::endl;
-			for(size_t j = 0; j < modID[i].size(); j++)
-			{
-				ofs<< modID[i][j]<<"\t";
-			}
-			ofs<< std::endl;
+			//ofs<< "CC:" << i<< std::endl;
+			//for(size_t j = 0; j < modID[i].size(); j++)
+			//{
+			//	ofs<< modID[i][j]<<"\t";
+			//}
+			//ofs<< std::endl;
 
 			std::vector<unsigned int> tmp;
 			for( size_t j = 0; j < order.size(); j++)
 			{
 				if( IsExist(modID[i], order[j][0]))
 				{
-					ofs<< j<<std::endl;
+					//ofs<< j<<std::endl;
 					for( size_t k = 0; k< order[j].size(); k++) 
 					{
-						ofs<< order[j][k]<<"\t";
+						//ofs<< order[j][k]<<"\t";
 						tmp.push_back(order[j][k]);    
 					}
-					ofs<< std::endl;
+					//ofs<< std::endl;
 				}
 			}
 			
 			if( modID[i].size() > tmp.size())
 			{
-				ofs<< "Left over:"<<std::endl;
+				//ofs<< "Left over:"<<std::endl;
 				for( size_t k = 0; k < modID[i].size(); k++)
 				{
 					if( !IsExist(tmp, modID[i][k]))
 					{
-						ofs<< modID[i][k]<<"\t";
+						//ofs<< modID[i][k]<<"\t";
 						tmp.push_back( modID[i][k]);
 					}
 				}
-				ofs<< std::endl;
+				//ofs<< std::endl;
 			}
 
 			//ofs<< tmp.size() << "\t"<<modID[i].size()<<std::endl;
 			tmpOrder.push_back(tmp);
-			ofs<<std::endl<<std::endl;
+			//ofs<<std::endl<<std::endl;
 		}
 
 		order.clear();
@@ -3028,7 +3027,7 @@ void SPDAnalysisModel::GetBiClusData(vnl_matrix<double> &mat, clusclus *c1, vnl_
 		}
 	}
 
-	ofs.close();
+	//ofs.close();
 }
 
 /// Find largest fully connected component in EMDMatrix.
@@ -4138,7 +4137,9 @@ void SPDAnalysisModel::ModuleCorrelationMatrixMatch(unsigned int kNeighbor, int 
 {
 	m_kNeighbor = kNeighbor;
 	std::cout<< m_kNeighbor<<std::endl;
-	std::ofstream ofs("ModuleCorrelationMatrixMatch.txt");
+
+	QString filenameMatch = this->filename + QString::number(kNeighbor) + "_NS.txt";
+	std::ofstream ofs(filenameMatch.toStdString().c_str());
 	int size = ClusterIndex.max_value() + 1;
 	std::vector< std::vector< unsigned int> > featureClusterIndex;
 	featureClusterIndex.resize( size);
@@ -4333,7 +4334,7 @@ void SPDAnalysisModel::ModuleCorrelationMatrixMatch(unsigned int kNeighbor, int 
 	std::cout<< "EMD matrix has been built successfully"<<endl;
 }
 
-double SPDAnalysisModel::WriteModuleCorMatrixImg(const char *imageName)
+double SPDAnalysisModel::GetAutoSimilarityThreshold()
 {
 	typedef itk::Image< float, 2> ImageType;
 	typedef itk::ImageFileWriter< ImageType> WriterType;
@@ -4375,7 +4376,7 @@ double SPDAnalysisModel::WriteModuleCorMatrixImg(const char *imageName)
 	}
 
 	WriterType::Pointer writer1 = WriterType::New();
-	writer1->SetFileName( imageName);
+	writer1->SetFileName( "NSMatAuto.tif");
 	writer1->SetInput(imgPtr);
 	writer1->Update();
 
@@ -4396,7 +4397,8 @@ double SPDAnalysisModel::WriteModuleCorMatrixImg(const char *imageName)
 
 	std::cout<< "Bin num for auto threshold: "<< bin_num<<std::endl;
 	filter->SetNumberOfHistogramBins( bin_num);
-
+	filter->SetInsideValue(0);
+	filter->SetOutsideValue(255);
 	try
 	{
 		filter->Update();
@@ -4411,7 +4413,7 @@ double SPDAnalysisModel::WriteModuleCorMatrixImg(const char *imageName)
 	std::cout<< thresholdMin <<std::endl;
 
 	WriterType::Pointer writer2 = WriterType::New();
-	writer2->SetFileName( "ThresholdSNMat.tif");
+	writer2->SetFileName( "ThresholdNSMatAuto.tif");
 	writer2->SetInput(filter->GetOutput());
 	writer2->Update();
 
@@ -5609,7 +5611,7 @@ double SPDAnalysisModel::CaculatePS(unsigned int kNeighbor, unsigned int nbins, 
 		}
 		if(debug)
 		{
-			std::ofstream ofs("debug.txt",std::ios_base::app);
+			std::ofstream ofs("debugNS.txt",std::ios_base::app);
 			ofs<< "kNNG1:"<<std::endl;
 			ofs<< histNear<<std::endl;
 			ofs<< "kFNG1:"<<std::endl;
@@ -5795,7 +5797,7 @@ void SPDAnalysisModel::EMDMatrixIteration(vnl_matrix<double> &afterIterMat)
 		}
 	}
 	std::cout<< "Converged after "<<count<<" iterations."<<std::endl;
-	std::ofstream ofs("NSEMDIter.txt");
+	std::ofstream ofs("NSIter.txt");
 	ofs<< afterIterMat<<std::endl<<std::endl;
 	ofs.close();
 }
@@ -5908,7 +5910,7 @@ double SPDAnalysisModel::CaculateNS(unsigned int kNeighbor, unsigned int nbins, 
 	
 	if(debug)
 	{
-		std::ofstream ofs("debug.txt",std::ios_base::app);
+		std::ofstream ofs("debugNS.txt",std::ios_base::app);
 		ofs<< "kNNG1:"<<std::endl;
 		ofs<< histNear<<std::endl;
 		ofs<< "full graph:"<<std::endl;
@@ -6021,7 +6023,7 @@ double SPDAnalysisModel::CaculateNSomplementUsingShortestPath(unsigned int kNeig
 	
 	if(debug)
 	{
-		std::ofstream ofs("debug.txt");
+		std::ofstream ofs("debugNS.txt");
 		ofs<< "kNNG1:"<<std::endl;
 		ofs<< histNear<<std::endl;
 		ofs<< "kNNG1Complement:"<<std::endl;
@@ -6197,7 +6199,7 @@ double SPDAnalysisModel::CaculatePSAveragebin(unsigned int kNeighbor, unsigned i
 		}
 		if(debug)
 		{
-			std::ofstream ofs("debug.txt", std::ios_base::app);
+			std::ofstream ofs("debugNS.txt", std::ios_base::app);
 			ofs<< "kNNG1:"<<std::endl;
 			ofs<< histNear<<std::endl;
 			ofs<< "kFNG1:"<<std::endl;

@@ -14,7 +14,7 @@
 #include "ftkGUI/HistoWindow.h"
 #include "ftkGUI/PlotWindow.h"
 #include "TrendHeatmapWindow.h"
-#include "HeatmapWindow.h"
+#include "OrderedHeatmapWindow.h"
 
 class SPDMSTModuleMatch : public QWidget
 {
@@ -89,11 +89,11 @@ private:
 	QCheckBox *continSelectCheck;
 	QString FileName;
 	GraphWindow *graph;
-	TrendHeatmap *simHeatmap;
+	OrderedHeatmap *simHeatmap;
 	HistoWindow *histo;
-	Heatmap *originalHeatmap;
-	Heatmap *progressionHeatmap;
-	Heatmap *HeatmapWin;
+	TrendHeatmapWindow *originalHeatmap;
+	TrendHeatmapWindow *progressionHeatmap;
+	TrendHeatmapWindow *HeatmapWin;
 	PlotWindow *plot;
 
 	vnl_vector<int> optimalleaforder;

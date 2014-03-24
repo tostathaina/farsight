@@ -531,6 +531,7 @@ void View3D::OkToBoot()
 		this->chooseInteractorStyle(0);
 		renderMode = RAYCAST;
 		SetRaycast->setChecked(true);
+		setRaycastMode();
 	}
 	if (!this->SomaFile.isEmpty())
 	{
@@ -2875,6 +2876,7 @@ void View3D::CreateActors()
 		this->Renderer->AddActor(this->BranchActor);
 	}
 	this->QVTK->GetRenderWindow()->Render();
+	this->viewIn2D = false;
 	for (unsigned int i = 0; i < this->ImageActors->NumberOfImages(); i++)
 	{
 		if (this->ImageActors->isRayCast(i))
@@ -3070,7 +3072,6 @@ void View3D::setRaycastMode()
 			this->Renderer->AddVolume(this->ImageActors->RayCastVolume(i));
 
 		this->ImageActors->setRenderStatus(i, true);
-
 	}
 	this->RaycastBar->toggleViewAction()->setDisabled(0);
 
@@ -3083,6 +3084,8 @@ void View3D::setRaycastMode()
 	SetSlicer->setChecked(false);
 	SetProjection->setChecked(false);
 	SetRaycast->setChecked(true);
+
+	this->ColorProfileCombo->setCurrentIndex(4);
 }
 
 void View3D::ClearRenderer(int i)
@@ -3696,7 +3699,7 @@ void View3D::createRayCastSliders()
 	//functions to control raycast opacity 
 	this->OpacitySpin = new QSpinBox(this);
 	this->OpacitySpin->setObjectName("OpacitySpin");
-	this->OpacitySpin->setRange(0,255);
+	this->OpacitySpin->setRange(0,300);
 
 	this->OpacityValueSpin = new QDoubleSpinBox(this);
 	this->OpacityValueSpin->setObjectName("OpacityValueSpin");
@@ -3708,7 +3711,7 @@ void View3D::createRayCastSliders()
 
 	this->OpacitySlider = new QSlider(Qt::Horizontal);
 	this->OpacitySlider->setObjectName("OpacitySlider");
-	this->OpacitySlider->setRange(0,255);
+	this->OpacitySlider->setRange(0,300);
 	this->OpacitySlider->setSingleStep(1);
 	this->OpacitySlider->setTickInterval(5);
 	this->OpacitySlider->setTickPosition(QSlider::TicksAbove);
@@ -3770,14 +3773,14 @@ void View3D::RayCastBrightnessChanged(int value)
 
 void View3D::RayCastOpacityChanged(int value)
 {
-	this->ImageActors->setOpacity(value, -1);
+	this->ImageActors->setOpacity(value, imageId);
 	this->TraceEditSettings.setValue("RayCast/Opacity", value);
 	this->QVTK->GetRenderWindow()->Render();
 }
 
 void View3D::RayCastOpacityValueChanged(double value)
 {
-	this->ImageActors->setOpacityValue(value, -1);
+	this->ImageActors->setOpacityValue(value, imageId);
 	this->TraceEditSettings.setValue("RayCast/OpacityValue", value);
 	this->QVTK->GetRenderWindow()->Render();
 }

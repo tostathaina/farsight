@@ -134,7 +134,7 @@ public:
 	double GetConnectionAccuracy( vtkSmartPointer<vtkTable> treeTable, vnl_matrix<double> &disMat, vnl_vector<double> &accuracyVec, vnl_vector<double> &aggDegree, double &aggDegreeValue, int neighborScope, int clusterScope);
 	void GetDataMatrix( vnl_matrix<double> &mat);
 	void GetValidationVec(vnl_vector<int> &validationVec);
-	double WriteModuleCorMatrixImg(const char *imageName);
+	double GetAutoSimilarityThreshold();
 
 	static double CaculatePS(unsigned int kNeighbor, unsigned int nbins, vnl_vector<double> &vec1, vnl_vector<double> &vec2, bool debug = false);
 	static double CaculatePSAveragebin(unsigned int kNeighbor, unsigned int nbins, vnl_vector<double> &vec1, vnl_vector<double> &vec2, bool debug = false);

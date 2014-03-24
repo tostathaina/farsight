@@ -7,7 +7,7 @@
 #include <QMessageBox>
 //define NDEBUG
 #include <assert.h>
-#include "ClusClus/clusclus.h"
+#include "clusclus.h"
 
 using std::ifstream;
 using std::endl;
@@ -36,7 +36,7 @@ SPDMSTModuleMatch::SPDMSTModuleMatch(QWidget *parent) :
 
     browseButton = new QPushButton(tr("Browse"), this);
     loadButton = new QPushButton(tr("Load"), this);
-	//loadTestButton = new QPushButton(tr("Raw Data Heatmap"), this);
+	//loadTestButton = new QPushButton(tr("Raw Data TrendHeatmapWindow"), this);
 
     featureNumLabel = new QLabel(tr("Feature size:"), this);
     featureNum = new QLabel(this);
@@ -84,7 +84,7 @@ SPDMSTModuleMatch::SPDMSTModuleMatch(QWidget *parent) :
 	//searchSubsetsButton = new QPushButton(tr("Search subsets"), this);
 	
     psdtButton = new QPushButton(tr("View Trend"), this);
-	heatmapButton = new QPushButton(tr("Heatmap"), this);
+	heatmapButton = new QPushButton(tr("TrendHeatmapWindow"), this);
 	
 	emdButton->setEnabled(TRUE);
 	psmButton->setEnabled(FALSE);
@@ -204,7 +204,7 @@ void SPDMSTModuleMatch::setModels(vtkSmartPointer<vtkTable> table, ObjectSelecti
 	{
 		delete this->simHeatmap;
 	}
-	this->simHeatmap = new TrendHeatmap( this);
+	this->simHeatmap = new OrderedHeatmap( this);
 	connect( simHeatmap, SIGNAL( SelChanged()), this, SLOT( updateSelMod()));
 
 	if(this->graph)
@@ -263,7 +263,7 @@ void SPDMSTModuleMatch::showOriginalHeatmap()
 		this->originalHeatmap = NULL;
 	}
 
-	this->originalHeatmap = new Heatmap(this);
+	this->originalHeatmap = new TrendHeatmapWindow(QString("Oringinal TrendHeatmapWindow"),this);
 	std::vector< int> sampleOrder;
 	for( int i = 0; i < tableAfterCellCluster->GetNumberOfRows(); i++)
 	{
@@ -289,7 +289,7 @@ void SPDMSTModuleMatch::showHeatmapAfterFeatureClustering()
 		this->originalHeatmap = NULL;
 	}
 
-	this->originalHeatmap = new Heatmap(this);
+	this->originalHeatmap = new TrendHeatmapWindow("Feature-clustered TrendHeatmapWindow",this);
 	std::vector< int> sampleOrder;
 	for( int i = 0; i < tableAfterCellCluster->GetNumberOfRows(); i++)
 	{
@@ -443,7 +443,7 @@ void SPDMSTModuleMatch::viewTrend()
 	{
 		delete this->HeatmapWin;
 	}
-	this->HeatmapWin = new Heatmap(this);
+	this->HeatmapWin = new TrendHeatmapWindow(QString("TrendHeatmapWindow"),this);
 
 	std::string selectModulesID = this->psdModuleSelectBox->text().toStdString();
 	std::vector< unsigned int> selModuleID;
@@ -671,7 +671,7 @@ void SPDMSTModuleMatch::showTrendHeatmap()
 	{
 		delete this->progressionHeatmap;
 	}
-	this->progressionHeatmap = new Heatmap(this);
+	this->progressionHeatmap = new TrendHeatmapWindow("MST-ordered TrendHeatmapWindow",this);
 	
 	std::vector<long int> TreeOrder;
 	this->graph->GetTrendTreeOrder(TreeOrder);   // order of the cluster 

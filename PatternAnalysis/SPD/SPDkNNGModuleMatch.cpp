@@ -26,13 +26,14 @@ SPDkNNGModuleMatch::SPDkNNGModuleMatch(QWidget *parent) :
 	histo = NULL;
 	originalHeatmap = NULL;
 	progressionHeatmap = NULL;
-	HeatmapWin = NULL;
+	autoHeatmapWin = NULL;
+	manualHeatmapWin = NULL;
 	plot = NULL;
 	connectedNum = 0;
 	bconnected = true;
 	int frameStyle = QFrame::Sunken | QFrame::Panel;
 
-	rawHeatmapButton = new QPushButton(tr("Show original Heatmap"), this);
+	rawHeatmapButton = new QPushButton(tr("Original Heatmap"), this);
 
     featureNumLabel = new QLabel(tr("Feature size:"), this);
     featureNum = new QLabel(this);
@@ -144,11 +145,11 @@ SPDkNNGModuleMatch::SPDkNNGModuleMatch(QWidget *parent) :
 	connect( kNearestNeighborBox, SIGNAL(editingFinished()), this, SLOT(editNearestNeighbor()));
 	connect( nsmButton, SIGNAL(clicked()), this, SLOT(generateNSM()));
 	connect( autoSelButton, SIGNAL(clicked()), this, SLOT(autoSelection()));
-	connect( autoTrendButton, SIGNAL(clicked()), this, SLOT(viewTrendAuto()));
+	connect( autoTrendButton, SIGNAL(clicked()), this, SLOT(autoClick()));
 	connect( heatmapButton, SIGNAL(clicked()), this, SLOT(showTrendHeatmap()));
 	connect( testButton, SIGNAL(clicked()), this, SLOT(TestTrend()));
 	connect( manualSelButton, SIGNAL(clicked()), this, SLOT(showNSMForManualSelection()));
-	connect( manualTrendButton, SIGNAL(clicked()), this, SLOT(viewTrendAuto(false)));
+	connect( manualTrendButton, SIGNAL(clicked()), this, SLOT(manualClick()));
 
 	SPDModel = new SPDAnalysisModel();
 }
@@ -196,7 +197,7 @@ void SPDkNNGModuleMatch::setModels(vtkSmartPointer<vtkTable> table, ObjectSelect
 	{
 		delete this->simHeatmap;
 	}
-	this->simHeatmap = new TrendHeatmap( this);
+	this->simHeatmap = new OrderedHeatmap( this);
 	connect( simHeatmap, SIGNAL( SelChanged()), this, SLOT( updateSelMod()));
 
 	if(this->graph)
@@ -216,7 +217,7 @@ void SPDkNNGModuleMatch::showOriginalHeatmap()
 		this->originalHeatmap = NULL;
 	}
 
-	this->originalHeatmap = new Heatmap(this);
+	this->originalHeatmap = new TrendHeatmapWindow(tr("Original TrendHeatmapWindow"), this);
 	std::vector< int> sampleOrder;
 	for( int i = 0; i < tableAfterCellCluster->GetNumberOfRows(); i++)
 	{
@@ -245,7 +246,7 @@ void SPDkNNGModuleMatch::showHeatmapAfterFeatureClustering()
 		this->originalHeatmap = NULL;
 	}
 
-	this->originalHeatmap = new Heatmap(this);
+	this->originalHeatmap = new TrendHeatmapWindow(tr("Original TrendHeatmapWindow"),this);
 	std::vector< int> sampleOrder;
 	for( int i = 0; i < tableAfterCellCluster->GetNumberOfRows(); i++)
 	{
@@ -310,7 +311,7 @@ void SPDkNNGModuleMatch::generateNSM()
 
 void SPDkNNGModuleMatch::autoSelection()
 {
-	double threshold = this->SPDModel->WriteModuleCorMatrixImg("NSMat.tif");
+	double threshold = this->SPDModel->GetAutoSimilarityThreshold();
 	std::cout<< "Auto Threshold: "<< threshold<<std::endl;
 
 	std::vector<std::vector<unsigned int> > modID;
@@ -384,6 +385,18 @@ void SPDkNNGModuleMatch::showNSMForManualSelection()
 	delete clus2;
 }
 
+void SPDkNNGModuleMatch::autoClick()
+{
+	std::cout<< "View auto trend."<<std::endl;
+	viewTrendAuto(true);
+}
+
+void SPDkNNGModuleMatch::manualClick()
+{
+	std::cout<< "View manual trend."<<std::endl;
+	viewTrendAuto(false);
+}
+
 void SPDkNNGModuleMatch::viewTrendAuto(bool bAuto)
 {
 	UpdateConnectedNum();  // update connected component
@@ -394,17 +407,11 @@ void SPDkNNGModuleMatch::viewTrendAuto(bool bAuto)
 		return;
 	}
 
-	if( this->originalHeatmap)
-	{
-		delete this->originalHeatmap;
-		this->originalHeatmap = NULL;
-	}
-
-	if( this->HeatmapWin)
-	{
-		delete this->HeatmapWin;
-	}
-	this->HeatmapWin = new Heatmap(this);
+	//if( this->originalHeatmap)
+	//{
+	//	delete this->originalHeatmap;
+	//	this->originalHeatmap = NULL;
+	//}
 
 	std::string selectModulesID = "";
 
@@ -466,24 +473,53 @@ void SPDkNNGModuleMatch::viewTrendAuto(bool bAuto)
 
 	// write graph to gdf file.
 	//SPDModel->WriteGraphToGDF(selFeatureID);
-	SPDModel->SaveSelectedFeatureNames("SelFeatures.txt", selOrder);
-	SPDModel->SaveNormalizedTableAfterFeatureSelection("NormalizeFeatureTable", selOrder);
+
+	if(bAuto)
+	{
+		SPDModel->SaveSelectedFeatureNames("AutoSelFeatures.txt", selOrder);
+		SPDModel->SaveNormalizedTableAfterFeatureSelection("AutoSelNormalizedFeatureTable", selOrder);
+	}
+	else
+	{
+		SPDModel->SaveSelectedFeatureNames("ManualSelFeatures.txt", selOrder);
+		SPDModel->SaveNormalizedTableAfterFeatureSelection("ManualSelNormalizedFeatureTable", selOrder);
+	}
 	//SPDModel->WriteKNNGConnectionMatrix( "kNNGC.txt", selFeatureID);
 
 	vtkSmartPointer<vtkTable> tableAfterCellCluster = SPDModel->GetDataTableAfterCellCluster();
 
 	connect(selection, SIGNAL( thresChanged()), this, SLOT( regenerateTrendTree()));
 	connect(selection, SIGNAL( ItemDeleted()), this, SLOT( ReRunSPDAnlysis()));
-	connect(HeatmapWin, SIGNAL(columnToColorChanged(int)), this, SLOT( ReColorTrendTree(int)));
+	//connect(HeatmapWin, SIGNAL(columnToColorChanged(int)), this, SLOT( ReColorTrendTree(int)));
 
 	std::map< int, int> indexMap;
 	SPDModel->GetClusterMapping(indexMap);
 
 	vnl_matrix<double> subTreeDistance;
 	SPDModel->GetComponentMinDistance(selFeatureID, connectedComponent, connectedNum, subTreeDistance);
-	this->HeatmapWin->setModelsforSPD( tableAfterCellCluster, selection, selOrder, unselOrder, &indexMap,\
+
+	if( bAuto)
+	{
+		if( this->autoHeatmapWin)
+		{
+			delete this->autoHeatmapWin;
+		}
+		this->autoHeatmapWin = new TrendHeatmapWindow(tr("Auto Selection Heatmap"), this);
+		this->autoHeatmapWin->setModelsforSPD( tableAfterCellCluster, selection, selOrder, unselOrder, &indexMap,\
 										&connectedComponent, connectedNum, &subTreeDistance);
-	this->HeatmapWin->showGraphforSPD( selOrder.size(), unselOrder.size());
+		this->autoHeatmapWin->showGraphforSPD( selOrder.size(), unselOrder.size());
+	}
+	else
+	{
+		if( this->manualHeatmapWin)
+		{
+			delete this->manualHeatmapWin;
+		}
+		this->manualHeatmapWin = new TrendHeatmapWindow(tr("Manual Selection Heatmap"), this);
+		this->manualHeatmapWin->setModelsforSPD( tableAfterCellCluster, selection, selOrder, unselOrder, &indexMap,\
+										&connectedComponent, connectedNum, &subTreeDistance);
+		this->manualHeatmapWin->showGraphforSPD( selOrder.size(), unselOrder.size());
+	}
 }
 
 void SPDkNNGModuleMatch::split(std::string& s, char delim, std::vector< unsigned int>& indexVec)
@@ -587,8 +623,9 @@ bool SPDkNNGModuleMatch::IsExist(std::vector< unsigned int> vec, unsigned int va
 void SPDkNNGModuleMatch::regenerateTrendTree()
 {
 	heatmapButton->setEnabled(true);
-	if( selection && this->HeatmapWin)
+	if( selection && (this->autoHeatmapWin || this->manualHeatmapWin))
 	{
+
 		std::cout<< "rerender progression view"<<endl;
 		selection->clear();
 		std::vector< std::vector< long int> > sampleIndex;
@@ -603,9 +640,6 @@ void SPDkNNGModuleMatch::regenerateTrendTree()
 		std::vector< double> colorVec;
 		std::vector< double> percentVec;
         SPDModel->GetSingleLinkageClusterAverage(sampleIndex, clusAverageMat);
-
-		//std::vector<int> clusterNum;
-		//this->HeatmapWin->GetSubTreeClusterNum(clusterNum);
 
 		std::vector<int> clusterNum(1);
 		clusterNum[0] = clusAverageMat.rows();
@@ -709,7 +743,7 @@ void SPDkNNGModuleMatch::showTrendHeatmap()
 	{
 		delete this->progressionHeatmap;
 	}
-	this->progressionHeatmap = new Heatmap(this);
+	this->progressionHeatmap = new TrendHeatmapWindow(tr("MST-ordered Heatmap"),this);
 	
 	std::vector<long int> TreeOrder;
 	this->graph->GetTrendTreeOrder(TreeOrder);   // order of the cluster 
@@ -777,11 +811,17 @@ void SPDkNNGModuleMatch::closeSubWindows()
 		delete progressionHeatmap;
 		progressionHeatmap = NULL;
 	}
-	if(HeatmapWin)
+	if(autoHeatmapWin)
 	{
-		HeatmapWin->close();
-		delete HeatmapWin;
-		HeatmapWin = NULL;
+		autoHeatmapWin->close();
+		delete autoHeatmapWin;
+		autoHeatmapWin = NULL;
+	}
+	if(manualHeatmapWin)
+	{
+		manualHeatmapWin->close();
+		delete manualHeatmapWin;
+		manualHeatmapWin = NULL;
 	}
 	if(plot)
 	{

@@ -96,6 +96,9 @@ struct imageFileHandle
 		opacity1 = 50;
 		opacity1Value = 0.1;
 		brightness = 150;
+		r = 90.0;
+		g = 90.0;
+		b = 90.0;
 		this->colorTransferFunction = vtkSmartPointer<vtkColorTransferFunction>::New();
 	}
 
@@ -132,7 +135,7 @@ struct imageFileHandle
 	vtkSmartPointer<vtkVolume> volume;
 	vtkSmartPointer<vtkVolume> somaVolume;
 
-        ProcessObjectProgressUpdater::Pointer processObjectProgressUpdater;
+    ProcessObjectProgressUpdater::Pointer processObjectProgressUpdater;
 
 	vtkSmartPointer<vtkColorTransferFunction> colorTransferFunction;
 };

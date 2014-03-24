@@ -14,7 +14,7 @@
 #include "ftkGUI/HistoWindow.h"
 #include "ftkGUI/PlotWindow.h"
 #include "TrendHeatmapWindow.h"
-#include "HeatmapWindow.h"
+#include "OrderedHeatmapWindow.h"
 #include <QListWidget>
 
 class SPDkNNGModuleMatch : public QWidget
@@ -36,6 +36,7 @@ protected:
 	virtual void closeEvent(QCloseEvent *event);
 	void closeSubWindows();
 	vtkSmartPointer<vtkTable> GetSubTableExcludeItems( vtkSmartPointer<vtkTable> table, std::set<long int> &selItems);
+	void viewTrendAuto(bool bAuto = true);
 
 protected slots:
 	void showOriginalHeatmap();
@@ -43,7 +44,6 @@ protected slots:
 	void generateNSM();
 	void autoSelection();
 	void showNSMForManualSelection();
-	void viewTrendAuto(bool bAuto = true);
 	void updateSelMod();
 	void editNearestNeighbor();
 	void showTrendHeatmap();
@@ -52,6 +52,8 @@ protected slots:
 	void ReColorTrendTree(int nfeature);
 	void UpdateConnectedNum();
 	void TestTrend();
+	void autoClick();
+	void manualClick();
 
 private:
 	SPDAnalysisModel *SPDModel;
@@ -91,11 +93,12 @@ private:
 
 	QString FileName;
 	GraphWindow *graph;
-	TrendHeatmap *simHeatmap;
+	OrderedHeatmap *simHeatmap;
 	HistoWindow *histo;
-	Heatmap *originalHeatmap;
-	Heatmap *progressionHeatmap;
-	Heatmap *HeatmapWin;
+	TrendHeatmapWindow *originalHeatmap;
+	TrendHeatmapWindow *progressionHeatmap;
+	TrendHeatmapWindow *autoHeatmapWin;
+	TrendHeatmapWindow *manualHeatmapWin;
 	PlotWindow *plot;
 
 	vnl_vector<int> optimalleaforder;

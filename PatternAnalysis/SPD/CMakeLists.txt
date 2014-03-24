@@ -7,14 +7,14 @@ SET( Libraries
     mbl
     ${QT_LIBRARIES})
 
-QT4_WRAP_CPP( GUI_MOC_SRCS SPDMSTModuleMatch.h SPDkNNGModuleMatch.h HeatmapWindow.h HeatmapWindowForNewSelection.h TrendHeatmapWindow.h)
+QT4_WRAP_CPP( GUI_MOC_SRCS SPDMSTModuleMatch.h SPDkNNGModuleMatch.h TrendHeatmapWindow.h HeatmapWindowForNewSelection.h OrderedHeatmapWindow.h)
 
 SET(SPD_SRCS
 	SPDAnalysisModel.h
 	SPDAnalysisModel.cpp
 	transportSimplex.h
-	HeatmapWindow.h
-	HeatmapWindow.cpp
+	OrderedHeatmapWindow.h
+	OrderedHeatmapWindow.cpp
 	HeatmapWindowForNewSelection.h
 	HeatmapWindowForNewSelection.cpp
 	TrendHeatmapWindow.h
@@ -22,13 +22,13 @@ SET(SPD_SRCS
 	SPDkNNGModuleMatch.h
 	SPDkNNGModuleMatch.cpp
 	SPDMSTModuleMatch.h
-	SPDMSTModuleMatch.cpp)
+	SPDMSTModuleMatch.cpp
+	clusclus.cpp
+	clusclus.h)
 
 IF ( NOT BUILD_CLUSCLUS )
 	MESSAGE( SEND_ERROR "Must turn on BUILD_CLUSCLUS" )
 ENDIF ( NOT BUILD_CLUSCLUS )
 	
 ADD_LIBRARY( SPD ${SPD_SRCS} ${GUI_MOC_SRCS})
-TARGET_LINK_LIBRARIES(SPD ${Libraries} ftkGUI ftkCommon ClusClus_lib)
-ADD_EXECUTABLE(PSC SPDAnalysisModel.cpp SPDAnalysisModel.h transportSimplex.h PSC.cpp)
-TARGET_LINK_LIBRARIES(PSC vnl mbl vul ${VTK_LIBRARIES} ftkCommon ClusClus_lib)
+TARGET_LINK_LIBRARIES(SPD ${Libraries} ftkGUI ftkCommon)
